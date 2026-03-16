@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ボンキュッボンGYM">
+<title>ボンキュッボンGYM</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: #f5f5f0; color: #1a1a1a; }
+.app { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; height: 100vh; }
+.header { background: #fff; padding: 16px 16px 12px; border-bottom: 0.5px solid #e0e0d8; flex-shrink: 0; }
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header-title { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+.main-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.bottom-nav { background: #fff; border-top: 0.5px solid #e0e0d8; display: flex; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+.nav-btn { flex: 1; padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; color: #aaa; }
+.nav-btn.active { color: #D85A30; }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label { font-size: 10px; font-weight: 500; }
+.section { display: none; padding: 16px; }
+.section.active { display: block; }
+.streak-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.metric { flex: 1; background: #fff; border-radius: 12px; padding: 12px; text-align: center; border: 0.5px solid #e0e0d8; }
+.metric-num { font-size: 28px; font-weight: 600; color: #1a1a1a; }
+.metric-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+.week-nav { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.week-nav::-webkit-scrollbar { display: none; }
+.day-btn { flex: none; width: 48px; padding: 7px 4px; border-radius: 10px; border: 0.5px solid #e0e0d8; background: #fff; cursor: pointer; text-align: center; }
+.day-btn.active { background: #D85A30; border-color: #D85A30; }
+.day-btn.done { border-color: #1D9E75; }
+.day-btn .dn { font-size: 10px; color: #888; display: block; }
+.day-btn.active .dn { color: #FAECE7; }
+.day-btn .dd { font-size: 15px; font-weight: 600; color: #1a1a1a; display: block; margin-top: 1px; }
+.day-btn.active .dd { color: #fff; }
+.day-btn .dot { width: 5px; height: 5px; border-radius: 50%; background: #1D9E75; margin: 3px auto 0; display: none; }
+.day-btn.done .dot { display: block; }
+.card { background: #fff; border: 0.5px solid #e0e0d8; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.card-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.card-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.tag { font-size: 10px; padding: 3px 10px; border-radius: 20px; }
+.tag-lower { background: #FAECE7; color: #993C1D; }
+.tag-cardio { background: #E6F1FB; color: #185FA5; }
+.tag-upper { background: #FBEAF0; color: #993556; }
+.tag-back { background: #EAF3DE; color: #3B6D11; }
+.tag-rest { background: #f5f5f0; color: #888; }
+.ex-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid #f0f0ea; cursor: pointer; }
+.ex-item:last-child { border-bottom: none; padding-bottom: 0; }
+.cb { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ccc; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+.cb.on { background: #1D9E75; border-color: #1D9E75; }
+.ck { width: 10px; height: 7px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg) translate(1px,-1px); display: none; }
+.cb.on .ck { display: block; }
+.ex-info { flex: 1; }
+.ex-name { font-size: 14px; color: #1a1a1a; font-weight: 500; }
+.ex-done .ex-name { color: #aaa; text-decoration: line-through; }
+.ex-det { font-size: 12px; color: #888; margin-top: 1px; }
+.ex-muscle { font-size: 11px; color: #D85A30; margin-top: 2px; }
+.weight-row { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+.weight-input { width: 72px; padding: 5px 8px; font-size: 13px; border: 0.5px solid #e0e0d8; border-radius: 8px; background: #f9f9f5; color: #1a1a1a; -webkit-appearance: none; }
+.pbar-wrap { height: 4px; background: #f0f0ea; border-radius: 2px; margin-top: 12px; }
+.pbar { height: 4px; background: #1D9E75; border-radius: 2px; transition: width .3s; }
+.pbar-txt { font-size: 11px; color: #888; margin-top: 4px; text-align: right; }
+.done-banner { background: #E1F5EE; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #0F6E56; margin-top: 10px; text-align: center; }
+.rest-msg { font-size: 14px; color: #888; padding: 12px 0; text-align: center; line-height: 1.7; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+.form-label { font-size: 12px; color: #888; }
+.form-input { padding: 9px 12px; font-size: 15px; border: 0.5px solid #e0e0d8; border-radius: 10px; background: #f9f9f5; color: #1a1a1a; -webkit-appearance: none; width: 100%; }
+.btn-primary { width: 100%; padding: 12px; font-size: 15px; font-weight: 600; background: #D85A30; color: #fff; border: none; border-radius: 12px; cursor: pointer; margin-top: 4px; }
+.log-list { margin-top: 10px; }
+.log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid #f0f0ea; font-size: 13px; }
+.log-item:last-child { border-bottom: none; }
+.log-date { color: #888; }
+.log-val { font-weight: 600; color: #1a1a1a; }
+.log-del { font-size: 11px; color: #888; cursor: pointer; padding: 3px 8px; border-radius: 6px; border: 0.5px solid #e0e0d8; background: none; }
+.no-data { font-size: 13px; color: #aaa; text-align: center; padding: 24px 0; }
+.seg { display: flex; background: #f5f5f0; border-radius: 10px; padding: 3px; margin-bottom: 14px; }
+.seg-btn { flex: 1; padding: 7px 4px; font-size: 12px; font-weight: 500; background: transparent; border: none; cursor: pointer; color: #888; border-radius: 8px; }
+.seg-btn.active { background: #fff; color: #1a1a1a; }
+.chart-wrap { position: relative; width: 100%; height: 220px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <span class="header-title">ボンキュッボン GYM</span>
+      <span id="header-streak" style="font-size:13px;color:#D85A30;font-weight:600;"></span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div id="sec-workout" class="section active">
+      <div class="streak-row">
+        <div class="metric"><div class="metric-num" id="s-streak">0</div><div class="metric-lbl">日継続中</div></div>
+        <div class="metric"><div class="metric-num" id="s-total">0</div><div class="metric-lbl">累計完了日</div></div>
+      </div>
+      <div class="week-nav" id="week-nav"></div>
+      <div id="menu-area"></div>
+    </div>
+
+    <div id="sec-body" class="section">
+      <div class="card">
+        <div class="card-head"><span class="card-title">今日の記録</span></div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">体重 (kg)</label>
+            <input class="form-input" type="number" id="inp-weight" step="0.1" min="30" max="200" placeholder="63.8">
+          </div>
+          <div class="form-field">
+            <label class="form-label">体脂肪率 (%)</label>
+            <input class="form-input" type="number" id="inp-fat" step="0.1" min="5" max="60" placeholder="32.1">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addBodyLog()">記録する</button>
+        <div class="log-list" id="body-log-list"></div>
+      </div>
+    </div>
+
+    <div id="sec-graph" class="section">
+      <div class="seg">
+        <button class="seg-btn active" onclick="switchGraph('weight',this)">体重</button>
+        <button class="seg-btn" onclick="switchGraph('fat',this)">体脂肪率</button>
+        <button class="seg-btn" onclick="switchGraph('muscle',this)">筋肉量</button>
+      </div>
+      <div class="card">
+        <div id="graph-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('workout',this)">
+      <span class="nav-icon">🏋️</span>
+      <span class="nav-label">トレーニング</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('body',this)">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">ボディ記録</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('graph',this)">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">グラフ</span>
+    </button>
+  </nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const DAYS = ['日','月','火','水','木','金','土'];
+const SCHED = {
+  1: { label: '下半身（ヒップ・太もも）', tag: 'lower', tagLabel: '下半身', exercises: [
+    { name: 'レッグプレス', det: '4セット × 12回', muscle: 'お尻・太もも' },
+    { name: 'アダクション', det: '3セット × 15回', muscle: '内もも' },
+    { name: 'アブダクション', det: '3セット × 15回', muscle: '外もも・お尻' },
+    { name: 'レッグエクステンション', det: '3セット × 15回', muscle: '前もも' },
+    { name: 'ハイパーエクステンション', det: '3セット × 15回', muscle: 'お尻・もも裏' },
+  ]},
+  2: { label: '有酸素 + 腹筋', tag: 'cardio', tagLabel: '有酸素', exercises: [
+    { name: '有酸素運動', det: '30〜40分', muscle: '全身' },
+    { name: '腹筋台 クランチ', det: '3セット × 20回', muscle: '腹筋' },
+    { name: 'アブドミナル', det: '3セット × 15回', muscle: '腹筋' },
+    { name: 'バックエクステンション', det: '3セット × 15回', muscle: '背筋' },
+  ]},
+  3: { label: '上半身（バスト・肩）', tag: 'upper', tagLabel: '上半身', exercises: [
+    { name: 'インクラインプレス', det: '4セット × 12回', muscle: '胸上部' },
+    { name: 'ショルダープレス', det: '3セット × 12回', muscle: '肩' },
+    { name: 'ラットプルダウン', det: '4セット × 12回', muscle: '背中' },
+    { name: 'ケーブルフライ', det: '3セット × 15回', muscle: '胸' },
+  ]},
+  4: { label: 'REST', tag: 'rest', tagLabel: '休息', exercises: [] },
+  5: { label: '下半身（もも裏・ヒップ強化）', tag: 'lower', tagLabel: '下半身', exercises: [
+    { name: 'プローンレッグカール', det: '4セット × 12回', muscle: 'もも裏・ヒップ下部' },
+    { name: 'アダクション', det: '3セット × 15回', muscle: '内もも' },
+    { name: 'アブダクション', det: '3セット × 15回', muscle: '外もも・お尻' },
+    { name: 'ハイパーエクステンション', det: '4セット × 15回', muscle: 'お尻・もも裏' },
+    { name: 'スミスマシン スクワット / ヒップスラスト', det: '4セット × 10回', muscle: 'お尻・太もも' },
+  ]},
+  6: { label: '背中 + 腕 + コア', tag: 'back', tagLabel: '背中・腕', exercises: [
+    { name: 'シーテッドロー', det: '4セット × 12回', muscle: '背中' },
+    { name: 'ラットプルダウン', det: '3セット × 12回', muscle: '広背筋' },
+    { name: 'バイセプスカール', det: '3セット × 15回', muscle: '二の腕前' },
+    { name: 'トライセプス', det: '3セット × 15回', muscle: '二の腕裏' },
+    { name: 'アブドミナル', det: '3セット × 20回', muscle: '腹筋' },
+  ]},
+  0: { label: 'REST', tag: 'rest', tagLabel: '休息', exercises: [] },
+};
+
+const SK = 'bonkyu_v2';
+let st = { streak:0, total:0, lastDone:null, checks:{}, weights:{}, completedDays:{}, bodyLog:[] };
+let selDate = new Date();
+let selDs = ds(selDate);
+let curGraph = 'weight';
+let bodyChart = null;
+
+function ds(d) { return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+
+function load() {
+  try {
+    const s = localStorage.getItem(SK);
+    if(s) st = {...st, ...JSON.parse(s)};
+  } catch(e) {}
+}
+
+function save() {
+  try { localStorage.setItem(SK, JSON.stringify(st)); } catch(e) {}
+}
+
+function switchTab(t, btn) {
+  ['workout','body','graph'].forEach(x => {
+    document.getElementById('sec-'+x).classList.toggle('active', x===t);
+  });
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(t==='graph') renderGraph();
+}
+
+function switchGraph(g, btn) {
+  curGraph = g;
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderGraph();
+}
+
+function weekDates() {
+  const t = new Date();
+  const dow = t.getDay();
+  const mon = new Date(t);
+  mon.setDate(t.getDate() - ((dow+6)%7));
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate()+i);
+    return d;
+  });
+}
+
+function renderWeekNav() {
+  const nav = document.getElementById('week-nav');
+  nav.innerHTML = '';
+  weekDates().forEach(d => {
+    const dstr = ds(d);
+    const btn = document.createElement('div');
+    btn.className = 'day-btn' + (dstr===selDs?' active':'') + (st.completedDays[dstr]?' done':'');
+    btn.innerHTML = `<span class="dn">${DAYS[d.getDay()]}</span><span class="dd">${d.getDate()}</span><div class="dot"></div>`;
+    btn.onclick = () => { selDate=d; selDs=dstr; renderWeekNav(); renderMenu(); };
+    nav.appendChild(btn);
+  });
+}
+
+function renderStreak() {
+  document.getElementById('s-streak').textContent = st.streak;
+  document.getElementById('s-total').textContent = st.total;
+  const hdr = document.getElementById('header-streak');
+  hdr.textContent = st.streak > 0 ? '🔥 '+st.streak+'日継続' : '';
+}
+
+function renderMenu() {
+  const area = document.getElementById('menu-area');
+  const dow = selDate.getDay();
+  const sched = SCHED[dow];
+  const checks = st.checks[selDs] || {};
+  const weights = st.weights[selDs] || {};
+  const total = sched.exercises.length;
+  const done = Object.values(checks).filter(Boolean).length;
+
+  let html = `<div class="card">
+    <div class="card-head">
+      <span class="card-title">${sched.label}</span>
+      <span class="tag tag-${sched.tag}">${sched.tagLabel}</span>
+    </div>`;
+
+  if(sched.tag === 'rest') {
+    html += `<div class="rest-msg">今日はしっかり休んで回復しよう！<br>筋肉はお休みの日に育ちます。</div>`;
+  } else {
+    sched.exercises.forEach((ex, i) => {
+      const chk = !!checks[i];
+      const w = weights[i] || '';
+      html += `<div class="ex-item${chk?' ex-done':''}" onclick="toggleCheck(${i})">
+        <div class="cb${chk?' on'}"><div class="ck"></div></div>
+        <div class="ex-info">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-det">${ex.det}</div>
+          <div class="ex-muscle">${ex.muscle}</div>
+          <div class="weight-row" onclick="event.stopPropagation()">
+            <input class="weight-input" type="number" placeholder="重量" min="0" max="500" step="0.5" value="${w}" oninput="saveWeight(${i},this.value)" />
+            <span style="font-size:12px;color:#888;">kg</span>
+          </div>
+        </div>
+      </div>`;
+    });
+    const pct = total > 0 ? Math.round(done/total*100) : 0;
+    html += `<div class="pbar-wrap"><div class="pbar" style="width:${pct}%"></div></div>
+      <div class="pbar-txt">${done} / ${total} 完了</div>`;
+    if(done===total && total>0) {
+      html += `<div class="done-banner">完了！お疲れさまでした！</div>`;
+    }
+  }
+  html += `</div>`;
+  area.innerHTML = html;
+}
+
+function saveWeight(idx, val) {
+  if(!st.weights[selDs]) st.weights[selDs] = {};
+  st.weights[selDs][idx] = val;
+  save();
+}
+
+function toggleCheck(idx) {
+  if(!st.checks[selDs]) st.checks[selDs] = {};
+  st.checks[selDs][idx] = !st.checks[selDs][idx];
+  const dow = selDate.getDay();
+  const sched = SCHED[dow];
+  const checks = st.checks[selDs];
+  const total = sched.exercises.length;
+  const done = Object.values(checks).filter(Boolean).length;
+  const wasComp = !!st.completedDays[selDs];
+  const isComp = total > 0 && done === total;
+  if(isComp && !wasComp) {
+    st.completedDays[selDs] = true;
+    st.total++;
+    st.lastDone = selDs;
+    recalcStreak();
+  } else if(!isComp && wasComp) {
+    st.completedDays[selDs] = false;
+    st.total = Math.max(0, st.total-1);
+    recalcStreak();
+  }
+  save(); renderWeekNav(); renderStreak(); renderMenu();
+}
+
+function recalcStreak() {
+  let s = 0;
+  const d = new Date();
+  for(let i=0; i<365; i++) {
+    const dstr = ds(d);
+    const dow = d.getDay();
+    const isRest = SCHED[dow].tag === 'rest';
+    if(isRest || st.completedDays[dstr]) { s++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  st.streak = s;
+}
+
+function addBodyLog() {
+  const w = parseFloat(document.getElementById('inp-weight').value);
+  const f = parseFloat(document.getElementById('inp-fat').value);
+  if(isNaN(w) && isNaN(f)) return;
+  const today = ds(new Date());
+  st.bodyLog = st.bodyLog.filter(l => l.date !== today);
+  st.bodyLog.push({ date: today, weight: isNaN(w)?null:w, fat: isNaN(f)?null:f });
+  st.bodyLog.sort((a,b) => a.date.localeCompare(b.date));
+  document.getElementById('inp-weight').value = '';
+  document.getElementById('inp-fat').value = '';
+  save(); renderBodyLog();
+}
+
+function delBodyLog(date) {
+  st.bodyLog = st.bodyLog.filter(l => l.date !== date);
+  save(); renderBodyLog(); renderGraph();
+}
+
+function renderBodyLog() {
+  const el = document.getElementById('body-log-list');
+  const recent = [...st.bodyLog].reverse().slice(0,7);
+  if(!recent.length) { el.innerHTML='<div class="no-data">まだ記録がありません</div>'; return; }
+  el.innerHTML = recent.map(l => `
+    <div class="log-item">
+      <span class="log-date">${l.date.replace(/-/g,'/')}</span>
+      <span class="log-val">${l.weight!=null?l.weight+'kg':''} ${l.fat!=null?l.fat+'%':''}</span>
+      <button class="log-del" onclick="delBodyLog('${l.date}')">削除</button>
+    </div>`).join('');
+}
+
+function renderGraph() {
+  const area = document.getElementById('graph-area');
+  const logs = st.bodyLog.filter(l => l.date);
+  if(!logs.length) {
+    area.innerHTML = '<div class="no-data">ボディ記録タブからデータを追加してください</div>';
+    bodyChart = null; return;
+  }
+  const labels = logs.map(l => l.date.slice(5).replace('-','/'));
+  let data, label, color;
+  if(curGraph === 'weight') {
+    data = logs.map(l => l.weight); label = '体重 (kg)'; color = '#378ADD';
+  } else if(curGraph === 'fat') {
+    data = logs.map(l => l.fat); label = '体脂肪率 (%)'; color = '#D85A30';
+  } else {
+    data = logs.map(l => (l.weight&&l.fat) ? parseFloat((l.weight*(1-l.fat/100)).toFixed(1)) : null);
+    label = '骨格筋量 (kg)'; color = '#1D9E75';
+  }
+  area.innerHTML = `<div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">${label}</div>
+    <div class="chart-wrap"><canvas id="body-chart"></canvas></div>`;
+  if(bodyChart) { bodyChart.destroy(); bodyChart = null; }
+  bodyChart = new Chart(document.getElementById('body-chart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label, data,
+        borderColor: color,
+        backgroundColor: color+'22',
+        borderWidth: 2,
+        pointBackgroundColor: color,
+        pointRadius: 4,
+        tension: 0.3,
+        fill: true,
+        spanGaps: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.parsed.y!=null ? ctx.parsed.y.toFixed(1) : '—' }}
+      },
+      scales: {
+        x: { ticks: { font:{size:11}, color:'#888', autoSkip:true, maxTicksLimit:8 }, grid: { display:false }},
+        y: { ticks: { font:{size:11}, color:'#888', callback: v => v.toFixed(1) }, grid: { color:'#88878022' }}
+      }
+    }
+  });
+}
+
+load(); renderStreak(); renderWeekNav(); renderMenu(); renderBodyLog();
+</script>
+</body>
+</html>
